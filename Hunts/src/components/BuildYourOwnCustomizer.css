@@ -1,0 +1,204 @@
+
+.build-your-own-modal .byo-header {
+  text-align: center;
+  padding: 2rem 2rem 1.5rem;
+  border-bottom: none;
+}
+
+.build-your-own-modal .byo-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #e31837;
+  margin: 0 0 0.35rem 0;
+}
+
+.build-your-own-modal .byo-subtitle {
+  font-size: 1rem;
+  color: #333;
+  font-style: italic;
+  margin: 0;
+}
+
+.build-your-own-modal .customizer-content {
+  padding: 1.5rem 2rem 2rem;
+}
+
+.build-your-own-modal .customizer-content.byo-content-no-header {
+  padding-top: 2.5rem;
+}
+
+.build-your-own-modal .byo-section {
+  margin-bottom: 2rem;
+}
+
+.build-your-own-modal .byo-section h3 {
+  font-size: 1.25rem;
+  color: #333;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.build-your-own-modal .byo-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.build-your-own-modal .byo-option-card {
+  position: relative;
+  width: 140px;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 0;
+  text-align: center;
+}
+
+.build-your-own-modal .byo-option-card:hover {
+  border-color: #ccc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.build-your-own-modal .byo-option-card.selected {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px #22c55e;
+}
+
+.build-your-own-modal .byo-option-card .byo-card-image {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: #fafafa;
+}
+
+.build-your-own-modal .byo-option-card .byo-card-label {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.3;
+}
+
+.build-your-own-modal .byo-option-card .byo-card-sublabel {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.build-your-own-modal .byo-option-card .byo-card-price {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.2rem;
+}
+
+.build-your-own-modal .byo-option-card .byo-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.build-your-own-modal .byo-option-card.selected .byo-check {
+  opacity: 1;
+}
+
+.build-your-own-modal .byo-footer {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: center;
+  background: #fff;
+}
+
+.build-your-own-modal .byo-add-btn {
+  background-color: #e31837;
+  color: white;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.build-your-own-modal .byo-add-btn:hover {
+  background-color: #c4122f;
+}
+
+.added-items-box {
+  margin: 0 2rem 1.25rem;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+}
+
+.added-items-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 0.75rem 0;
+}
+
+.added-items-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.added-item-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem 0.35rem 0.75rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #444;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.added-item-tag:hover {
+  background: #fff0f0;
+  border-color: #e31837;
+}
+
+.added-item-remove {
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #999;
+}
+
+.added-item-tag:hover .added-item-remove {
+  color: #e31837;
+}
+
+@media (max-width: 768px) {
+  .build-your-own-modal .byo-option-card {
+    width: 120px;
+  }
+  .build-your-own-modal .byo-option-card .byo-card-image {
+    height: 80px;
+    font-size: 2.5rem;
+  }
+}

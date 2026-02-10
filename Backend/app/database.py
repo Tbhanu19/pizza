@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 """Database engine, session, and base."""
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -51,7 +51,7 @@ def init_db():
             if r.scalar() is None:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)"))
                 conn.commit()
-=======
+
 """Database engine, session, and base."""
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
@@ -104,4 +104,3 @@ def init_db():
             if r.scalar() is None:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)"))
                 conn.commit()
->>>>>>> 9ea165a1704de24445771a5c551b07ef0ba8c933

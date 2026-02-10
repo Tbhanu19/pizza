@@ -1,0 +1,90 @@
+.drinks-items-modal .byo-header {
+  text-align: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.drinks-items-modal .byo-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #e31837;
+  margin: 0 0 0.25rem 0;
+}
+
+.drinks-items-modal .byo-subtitle {
+  font-size: 0.95rem;
+  color: #666;
+  font-style: italic;
+  margin: 0;
+}
+
+.drinks-items-grid {
+  padding: 3rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .drinks-items-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.drinks-item-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.drinks-item-image {
+  width: 100%;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: linear-gradient(180deg, #fff4d6 0%, #fde8b4 100%);
+}
+
+.drinks-item-info {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.drinks-item-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.drinks-item-description {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+.drinks-item-info .customize-btn {
+  margin-top: auto;
+}
+
+.drinks-add-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+@media (max-width: 500px) {
+  .drinks-items-grid {
+    grid-template-columns: 1fr;
+  }
+}

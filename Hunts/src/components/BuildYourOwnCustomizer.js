@@ -1,0 +1,247 @@
+import React, { useState } from 'react';
+import { useCart } from '../context/CartContext';
+import './PizzaCustomizer.css';
+import './BuildYourOwnCustomizer.css';
+
+const CRUSTS = [
+  { name: 'Original Crust', sublabel: null, image: '', price: 0 },
+  { name: 'Thin Crust', sublabel: '12" Medium', image: '', price: 0 },
+];
+
+const SAUCES = [
+  { name: 'Tomato Sauce', sublabel: null, image: '', price: 0 },
+];
+
+const CHEESES = [
+  { name: 'Mozzarella', sublabel: null, image: '', price: 0 },
+  { name: 'Cheddar', sublabel: null, image: '', price: 0 },
+];
+
+const MEATS = [
+  { name: 'Pepperoni', image: '', price: 0 },
+  { name: 'Italian Sausage', image: '', price: 0 },
+  { name: 'Beef', image: '', price: 0 },
+  { name: 'Bacon', image: '', price: 0 },
+];
+
+const VEGGIES = [
+  { name: 'Bell Peppers', image: '', price: 0 },
+  { name: 'Mushrooms', image: '', price: 0 },
+  { name: 'Onions', image: '', price: 0 },
+  { name: 'Black Olives', image: '', price: 0 },
+  { name: 'Banana Peppers', image: '', price: 0 },
+  { name: 'Jalapeño Peppers', image: '', price: 0 },
+];
+
+const EXTRA_TOPPINGS = [...MEATS, ...VEGGIES];
+
+const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice }) => (
+  <button
+    type="button"
+    className={`byo-option-card ${isSelected ? 'selected' : ''}`}
+    onClick={onSelect}
+  >
+    <span className="byo-check">✓</span>
+    <div className="byo-card-image">{item.image}</div>
+    <div className="byo-card-label">
+      {item.name}
+      {sublabel && <div className="byo-card-sublabel">{sublabel}</div>}
+      {showPrice && <span className="byo-card-price">+${(item.price ?? 0).toFixed(2)}</span>}
+    </div>
+  </button>
+);
+
+const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
+  const { addToCart } = useCart();
+  const [selectedCrust, setSelectedCrust] = useState(CRUSTS[0]);
+  const [selectedSauce, setSelectedSauce] = useState(SAUCES[0]);
+  const [selectedCheese, setSelectedCheese] = useState(CHEESES[0]);
+  const [selectedMeats, setSelectedMeats] = useState([]);
+  const [selectedVeggies, setSelectedVeggies] = useState([]);
+  const [selectedExtraToppings, setSelectedExtraToppings] = useState([]);
+
+  const toggleMulti = (item, selectedList, setter) => {
+    setter((prev) => {
+      const exists = prev.find((t) => t.name === item.name);
+      if (exists) return prev.filter((t) => t.name !== item.name);
+      return [...prev, item];
+    });
+  };
+
+  const calculatePrice = () => {
+    const base = pizza.basePrice;
+    const cheese = selectedCheese?.price ?? 0;
+    const meats = selectedMeats.reduce((s, t) => s + (t.price ?? 0), 0);
+    const veggies = selectedVeggies.reduce((s, t) => s + (t.price ?? 0), 0);
+    const extras = selectedExtraToppings.reduce((s, t) => s + (t.price ?? 0), 0);
+    return base + cheese + meats + veggies + extras;
+  };
+
+  const handleAddToCart = () => {
+    const customizations = {
+      crust: selectedCrust,
+      sauce: selectedSauce,
+      cheese: selectedCheese,
+      meats: selectedMeats,
+      veggies: selectedVeggies,
+      extraToppings: selectedExtraToppings,
+    };
+    addToCart({
+      id: `build-${Date.now()}`,
+      name: pizza.name,
+      price: calculatePrice(),
+      image: pizza.image,
+      customizations,
+    });
+    onClose();
+  };
+
+  return (
+    <div className="customizer-overlay" onClick={onClose}>
+      <div className="customizer-modal build-your-own-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="close-btn" onClick={onClose}>×</button>
+
+        <div className="customizer-content byo-content-no-header">
+          <div className="byo-section">
+            <h3 className="byo-section-label">Crust</h3>
+            <div className="byo-options-row">
+              {CRUSTS.map((c) => (
+                <OptionCard
+                  key={c.name}
+                  item={c}
+                  isSelected={selectedCrust?.name === c.name}
+                  onSelect={() => setSelectedCrust(c)}
+                  sublabel={c.sublabel}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="byo-section">
+            <h3 className="byo-section-label">Sauce</h3>
+            <div className="byo-options-row">
+              {SAUCES.map((s) => (
+                <OptionCard
+                  key={s.name}
+                  item={s}
+                  isSelected={selectedSauce?.name === s.name}
+                  onSelect={() => setSelectedSauce(s)}
+                  sublabel={s.sublabel}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="byo-section">
+            <h3 className="byo-section-label">Cheese</h3>
+            <div className="byo-options-row">
+              {CHEESES.map((c) => (
+                <OptionCard
+                  key={c.name}
+                  item={c}
+                  isSelected={selectedCheese?.name === c.name}
+                  onSelect={() => setSelectedCheese(c)}
+                  sublabel={c.sublabel}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="byo-section">
+            <h3 className="byo-section-label">MEATS</h3>
+            <div className="byo-options-row">
+              {MEATS.map((m) => {
+                const isSelected = selectedMeats.some((t) => t.name === m.name);
+                return (
+                  <OptionCard
+                    key={m.name}
+                    item={m}
+                    isSelected={isSelected}
+                    onSelect={() => toggleMulti(m, selectedMeats, setSelectedMeats)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          <div className="byo-section">
+            <h3 className="byo-section-label">VEGGIES</h3>
+            <div className="byo-options-row">
+              {VEGGIES.map((v) => {
+                const isSelected = selectedVeggies.some((t) => t.name === v.name);
+                return (
+                  <OptionCard
+                    key={v.name}
+                    item={v}
+                    isSelected={isSelected}
+                    onSelect={() => toggleMulti(v, selectedVeggies, setSelectedVeggies)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          <div className="byo-section">
+            <h3 className="byo-section-label">Extra toppings</h3>
+            <div className="byo-options-row">
+              {EXTRA_TOPPINGS.map((t) => {
+                const isSelected = selectedExtraToppings.some((x) => x.name === t.name);
+                return (
+                  <OptionCard
+                    key={t.name}
+                    item={t}
+                    isSelected={isSelected}
+                    onSelect={() => toggleMulti(t, selectedExtraToppings, setSelectedExtraToppings)}
+                    showPrice
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="added-items-box">
+          <h4 className="added-items-title">Added items</h4>
+          <div className="added-items-list">
+            {selectedCrust && (
+              <button type="button" className="added-item-tag" onClick={() => setSelectedCrust(CRUSTS[0])} title="Reset to default">
+                {selectedCrust.name} <span className="added-item-remove">×</span>
+              </button>
+            )}
+            {selectedSauce && (
+              <button type="button" className="added-item-tag" onClick={() => setSelectedSauce(SAUCES[0])} title="Reset to default">
+                {selectedSauce.name} <span className="added-item-remove">×</span>
+              </button>
+            )}
+            {selectedCheese && (
+              <button type="button" className="added-item-tag" onClick={() => setSelectedCheese(CHEESES[0])} title="Reset to default">
+                {selectedCheese.name} <span className="added-item-remove">×</span>
+              </button>
+            )}
+            {selectedMeats.map((m) => (
+              <button key={m.name} type="button" className="added-item-tag" onClick={() => setSelectedMeats((prev) => prev.filter((t) => t.name !== m.name))} title="Remove">
+                {m.name} <span className="added-item-remove">×</span>
+              </button>
+            ))}
+            {selectedVeggies.map((v) => (
+              <button key={v.name} type="button" className="added-item-tag" onClick={() => setSelectedVeggies((prev) => prev.filter((t) => t.name !== v.name))} title="Remove">
+                {v.name} <span className="added-item-remove">×</span>
+              </button>
+            ))}
+            {selectedExtraToppings.map((t) => (
+              <button key={t.name} type="button" className="added-item-tag" onClick={() => setSelectedExtraToppings((prev) => prev.filter((x) => x.name !== t.name))} title="Remove">
+                {t.name} +${(t.price ?? 0).toFixed(2)} <span className="added-item-remove">×</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="customizer-footer byo-footer">
+          <button type="button" className="byo-add-btn" onClick={handleAddToCart}>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BuildYourOwnCustomizer;

@@ -1,0 +1,101 @@
+/* Larger modal for Vegetarian items */
+.customizer-modal.vegeterian-items-modal {
+  max-width: 900px;
+  width: 96%;
+  max-height: 94vh;
+  overflow-y: auto;
+}
+
+.vegeterian-items-grid {
+  padding: 3rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.vegeterian-item-card {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e5e5;
+  min-height: 420px;
+}
+
+.vegeterian-item-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+  border-color: #d0d0d0;
+}
+
+.vegeterian-item-image {
+  width: 100%;
+  height: 220px;
+  min-height: 180px;
+  background: linear-gradient(180deg, #fff4d6 0%, #fde8b4 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
+}
+
+.vegeterian-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.vegeterian-item-image .vegeterian-item-emoji {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.vegeterian-item-info {
+  padding: 1.25rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  min-width: 0;
+}
+
+.vegeterian-item-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+
+.vegeterian-item-description {
+  color: #555;
+  font-size: 0.875rem;
+  margin: 0 0 1rem 0;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.vegeterian-item-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: auto;
+}
+
+.vegeterian-item-footer .customize-btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 24px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .vegeterian-items-grid {
+    grid-template-columns: 1fr;
+  }
+}
