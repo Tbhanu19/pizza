@@ -8,7 +8,19 @@ import ChickenItemsView from '../components/ChickenItemsView';
 import DrinksItemsView from '../components/DrinksItemsView';
 import VegeterianItemsView from '../components/VegeterianItemsView';
 import buildYourOwnImage from '../assets/build-your-own.png';
+import menuSpecialtyImage from '../assets/menu-specialty.png';
+import menuVegetarianImage from '../assets/menu-vegetarian.png';
+import menuChickenImage from '../assets/menu-chicken.png';
+import menuDrinksImage from '../assets/menu-drinks.png';
 import './Menu.css';
+
+const MENU_CARD_IMAGES = {
+  'Build your own': buildYourOwnImage,
+  'Speciality': menuSpecialtyImage,
+  'Vegeterian': menuVegetarianImage,
+  'Chicken': menuChickenImage,
+  'Drinks': menuDrinksImage,
+};
 
 const CATEGORY_DISPLAY = {
   'Build Your Own': { name: 'Build your own', description: 'Choose your crust, sauce, cheese, and toppings to create your perfect pizza', image: '🍕' },
@@ -92,7 +104,7 @@ const Menu = () => {
         {menuOptions.map((item) => (
           <PizzaCard
             key={item.id}
-            pizza={item.name === 'Build your own' ? { ...item, image: buildYourOwnImage } : item}
+            pizza={{ ...item, image: MENU_CARD_IMAGES[item.name] ?? item.image }}
             onSelect={handlePizzaSelect}
           />
         ))}

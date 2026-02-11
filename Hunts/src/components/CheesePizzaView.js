@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { getToppingImageForItem } from '../constants/toppingImages';
 import './PizzaCustomizer.css';
 import './BuildYourOwnCustomizer.css';
 
@@ -18,14 +19,16 @@ const EXTRA_CHEESE_OPTIONS = [
   { name: 'Extra Cheddar', image: '', price: 0 },
 ];
 
-const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice }) => (
+const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice, imageSrc }) => (
   <button
     type="button"
     className={`byo-option-card ${isSelected ? 'selected' : ''}`}
     onClick={onSelect}
   >
     <span className="byo-check">✓</span>
-    <div className="byo-card-image">{item.image}</div>
+    <div className="byo-card-image">
+      {imageSrc ? <img src={imageSrc} alt={item.name} /> : (item.image || null)}
+    </div>
     <div className="byo-card-label">
       {item.name}
       {sublabel && <div className="byo-card-sublabel">{sublabel}</div>}
@@ -82,6 +85,7 @@ const CheesePizzaView = ({ pizza, onClose }) => {
                 <OptionCard
                   key={c.name}
                   item={c}
+                  imageSrc={getToppingImageForItem(c)}
                   isSelected={selectedCrust?.name === c.name}
                   onSelect={() => setSelectedCrust(c)}
                   sublabel={c.sublabel}
@@ -99,6 +103,7 @@ const CheesePizzaView = ({ pizza, onClose }) => {
                   <OptionCard
                     key={c.name}
                     item={c}
+                    imageSrc={getToppingImageForItem(c)}
                     isSelected={isSelected}
                     onSelect={() => toggleMulti(c, selectedCheeses, setSelectedCheeses)}
                   />
@@ -116,6 +121,7 @@ const CheesePizzaView = ({ pizza, onClose }) => {
                   <OptionCard
                     key={t.name}
                     item={t}
+                    imageSrc={getToppingImageForItem(t)}
                     isSelected={isSelected}
                     onSelect={() => toggleMulti(t, selectedExtraCheese, setSelectedExtraCheese)}
                     showPrice

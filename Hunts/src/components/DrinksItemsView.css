@@ -43,12 +43,27 @@
 
 .drinks-item-image {
   width: 100%;
+  height: 160px;
   min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
   background: linear-gradient(180deg, #fff4d6 0%, #fde8b4 100%);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.drinks-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.drinks-item-image .drinks-item-emoji {
+  line-height: 1;
 }
 
 .drinks-item-info {

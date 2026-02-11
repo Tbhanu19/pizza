@@ -94,6 +94,28 @@ const SpecialityItemsView = ({ onClose }) => {
     setActiveItem(null);
   };
 
+  const SpecialtyCard = ({ item }) => {
+    const imageSrc = getSpecialtyImage(item);
+    return (
+      <div className="speciality-item-card">
+        <div className="speciality-item-image">
+          {imageSrc ? <img src={imageSrc} alt={item.name} /> : <span className="speciality-item-emoji">{item.image}</span>}
+        </div>
+        <div className="speciality-item-info">
+          <h3 className="speciality-item-name">{item.name}</h3>
+          <p className="speciality-item-description">{item.description || 'Choose crust, sauce, and add more toppings.'}</p>
+          <div className="speciality-item-footer">
+            {item.name === 'Breakfast' ? (
+              <button type="button" className="customize-btn" onClick={handleBreakfastAddToCart}>Add to Cart</button>
+            ) : (
+              <button type="button" className="customize-btn" onClick={() => handleCustomize(item)}>Customize</button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (activeItem) {
     const isLoaded = activeItem.id === 'loaded' || (activeItem.name || '').toLowerCase() === 'loaded';
     if (isLoaded) {
@@ -121,37 +143,7 @@ const SpecialityItemsView = ({ onClose }) => {
           <div className="speciality-items-loading">Loading...</div>
         ) : (
           <div className="speciality-items-grid">
-            {items.map((item) => {
-              const imageSrc = getSpecialtyImage(item);
-              return (
-              <div key={item.id} className="speciality-item-card">
-                <div className="speciality-item-image">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={item.name} />
-                  ) : (
-                    <span className="speciality-item-emoji">{item.image}</span>
-                  )}
-                </div>
-                <div className="speciality-item-info">
-                  <h3 className="speciality-item-name">{item.name}</h3>
-                  <p className="speciality-item-description">
-                    {item.description || 'Choose crust, sauce, and add more toppings.'}
-                  </p>
-                  <div className="speciality-item-footer">
-                    {item.name === 'Breakfast' ? (
-                      <button type="button" className="customize-btn" onClick={handleBreakfastAddToCart}>
-                        Add to Cart
-                      </button>
-                    ) : (
-                      <button type="button" className="customize-btn" onClick={() => handleCustomize(item)}>
-                        Customize
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-            })}
+            {items.map((item) => <SpecialtyCard key={item.id} item={item} />)}
           </div>
         )}
       </div>

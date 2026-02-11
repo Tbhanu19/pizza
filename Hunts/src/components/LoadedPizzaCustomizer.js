@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { getToppingImageForItem } from '../constants/toppingImages';
 import './PizzaCustomizer.css';
 import './BuildYourOwnCustomizer.css';
 
@@ -31,14 +32,16 @@ const VEGGIES = [
 const TOPPINGS_LIST = [...MEATS, ...VEGGIES];
 const isMeat = (name) => MEATS.some((m) => m.name === name);
 
-const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice }) => (
+const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice, imageSrc }) => (
   <button
     type="button"
     className={`byo-option-card ${isSelected ? 'selected' : ''}`}
     onClick={onSelect}
   >
     <span className="byo-check">✓</span>
-    <div className="byo-card-image">{item.image}</div>
+    <div className="byo-card-image">
+      {imageSrc ? <img src={imageSrc} alt={item.name} /> : (item.image || null)}
+    </div>
     <div className="byo-card-label">
       {item.name}
       {sublabel && <div className="byo-card-sublabel">{sublabel}</div>}
@@ -134,6 +137,7 @@ const LoadedPizzaCustomizer = ({ pizza, onClose }) => {
                 <OptionCard
                   key={c.name}
                   item={c}
+                  imageSrc={getToppingImageForItem(c)}
                   isSelected={selectedCrust?.name === c.name}
                   onSelect={() => setSelectedCrust(c)}
                   sublabel={c.sublabel}
@@ -149,6 +153,7 @@ const LoadedPizzaCustomizer = ({ pizza, onClose }) => {
                 <OptionCard
                   key={s.name}
                   item={s}
+                  imageSrc={getToppingImageForItem(s)}
                   isSelected={selectedSauce?.name === s.name}
                   onSelect={() => setSelectedSauce(s)}
                   sublabel={s.sublabel}
@@ -166,6 +171,7 @@ const LoadedPizzaCustomizer = ({ pizza, onClose }) => {
                   <OptionCard
                     key={t.name}
                     item={t}
+                    imageSrc={getToppingImageForItem(t)}
                     isSelected={isSelected}
                     onSelect={() => toggleTopping(t)}
                   />
@@ -185,6 +191,7 @@ const LoadedPizzaCustomizer = ({ pizza, onClose }) => {
                   <OptionCard
                     key={t.name}
                     item={t}
+                    imageSrc={getToppingImageForItem(t)}
                     isSelected={isSelected}
                     onSelect={onExtraSelect}
                     sublabel={qty > 0 ? `×${qty}` : null}

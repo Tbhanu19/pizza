@@ -4,11 +4,28 @@ import { api } from '../api';
 import './PizzaCustomizer.css';
 import './DrinksItemsView.css';
 
+import imgCocaCola from '../assets/drink-coca-cola.png';
+import imgPepsi from '../assets/drink-pepsi.png';
+import imgSprite from '../assets/drink-sprite.png';
+import imgFanta from '../assets/drink-fanta.png';
+
+const DRINK_IMAGES = {
+  'Coca-Cola': imgCocaCola,
+  'Coke': imgCocaCola,
+  'Pepsi': imgPepsi,
+  'Sprite': imgSprite,
+  'Fanta': imgFanta,
+};
+
+function getDrinkImage(item) {
+  return DRINK_IMAGES[item.name] ?? null;
+}
+
 const FALLBACK_ITEMS = [
   { id: 101, name: 'Coca-Cola', description: 'Classic 20oz bottle', basePrice: 0, image: '🥤' },
-  { id: 102, name: 'Sprite', description: 'Lemon-lime 20oz bottle', basePrice: 0, image: '🥤' },
-  { id: 103, name: 'Iced Tea', description: 'Sweet or unsweetened 20oz', basePrice: 0, image: '🥤' },
-  { id: 104, name: 'Water', description: 'Bottled water 20oz', basePrice: 0, image: '🥤' },
+  { id: 102, name: 'Pepsi', description: 'Classic 20oz bottle', basePrice: 0, image: '🥤' },
+  { id: 103, name: 'Sprite', description: 'Lemon-lime 20oz bottle', basePrice: 0, image: '🥤' },
+  { id: 104, name: 'Fanta', description: 'Orange 20oz bottle', basePrice: 0, image: '🥤' },
 ];
 
 const DrinksItemsView = ({ onClose }) => {
@@ -24,13 +41,18 @@ const DrinksItemsView = ({ onClose }) => {
     let cancelled = false;
     api.getProducts({ type: 'drink' }).then((list) => {
       if (!cancelled && Array.isArray(list)) {
-        setItems(list.map((p) => ({
-          id: p.id,
-          name: p.name,
-          description: p.description,
-          basePrice: p.base_price ?? 0,
-          image: p.image || '🥤',
-        })));
+        setItems(list.map((p) => {
+          const rawName = (p.name || '').trim();
+          const name = rawName === 'Water' ? 'Fanta' : rawName === 'Coke' ? 'Coca-Cola' : rawName;
+          const description = rawName === 'Water' ? 'Orange 20oz bottle' : (p.description || '');
+          return {
+            id: p.id,
+            name,
+            description,
+            basePrice: p.base_price ?? 0,
+            image: p.image || '🥤',
+          };
+        }));
       }
     }).catch(() => {
       if (!cancelled) setItems(FALLBACK_ITEMS);
@@ -45,11 +67,29 @@ const DrinksItemsView = ({ onClose }) => {
       id: `${item.id}-${Date.now()}`,
       name: item.name,
       price: item.basePrice ?? 0,
-      image: item.image,
+      image: getDrinkImage(item) || item.image,
       menu_item_id: typeof item.id === 'number' ? item.id : undefined,
       customizations: {},
     });
     onClose();
+  };
+
+  const DrinkCard = ({ item }) => {
+    const imageSrc = getDrinkImage(item);
+    return (
+      <div className="drinks-item-card">
+        <div className="drinks-item-image">
+          {imageSrc ? <img src={imageSrc} alt={item.name} /> : <span className="drinks-item-emoji">{item.image}</span>}
+        </div>
+        <div className="drinks-item-info">
+          <h3 className="drinks-item-name">{item.name}</h3>
+          {item.description && <p className="drinks-item-description">{item.description}</p>}
+          <button type="button" className="customize-btn drinks-add-btn" onClick={() => handleAddToCart(item)}>
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -60,24 +100,7 @@ const DrinksItemsView = ({ onClose }) => {
           <div className="drinks-items-loading">Loading...</div>
         ) : (
           <div className="drinks-items-grid">
-            {items.map((item) => (
-              <div key={item.id} className="drinks-item-card">
-                <div className="drinks-item-image">{item.image}</div>
-                <div className="drinks-item-info">
-                  <h3 className="drinks-item-name">{item.name}</h3>
-                  {item.description && (
-                    <p className="drinks-item-description">{item.description}</p>
-                  )}
-                  <button
-                    type="button"
-                    className="customize-btn drinks-add-btn"
-                    onClick={() => handleAddToCart(item)}
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            ))}
+            {items.map((item) => <DrinkCard key={item.id} item={item} />)}
           </div>
         )}
       </div>

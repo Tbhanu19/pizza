@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import { getToppingImageForItem } from '../constants/toppingImages';
 import './PizzaCustomizer.css';
 import './BuildYourOwnCustomizer.css';
 
@@ -35,14 +36,16 @@ const VEGGIES = [
 
 const EXTRA_TOPPINGS = [...MEATS, ...VEGGIES];
 
-const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice }) => (
+const OptionCard = ({ item, isSelected, onSelect, sublabel, showPrice, imageSrc }) => (
   <button
     type="button"
     className={`byo-option-card ${isSelected ? 'selected' : ''}`}
     onClick={onSelect}
   >
     <span className="byo-check">✓</span>
-    <div className="byo-card-image">{item.image}</div>
+    <div className="byo-card-image">
+      {imageSrc ? <img src={imageSrc} alt={item.name} /> : (item.image || null)}
+    </div>
     <div className="byo-card-label">
       {item.name}
       {sublabel && <div className="byo-card-sublabel">{sublabel}</div>}
@@ -109,6 +112,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                 <OptionCard
                   key={c.name}
                   item={c}
+                  imageSrc={getToppingImageForItem(c)}
                   isSelected={selectedCrust?.name === c.name}
                   onSelect={() => setSelectedCrust(c)}
                   sublabel={c.sublabel}
@@ -124,6 +128,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                 <OptionCard
                   key={s.name}
                   item={s}
+                  imageSrc={getToppingImageForItem(s)}
                   isSelected={selectedSauce?.name === s.name}
                   onSelect={() => setSelectedSauce(s)}
                   sublabel={s.sublabel}
@@ -139,6 +144,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                 <OptionCard
                   key={c.name}
                   item={c}
+                  imageSrc={getToppingImageForItem(c)}
                   isSelected={selectedCheese?.name === c.name}
                   onSelect={() => setSelectedCheese(c)}
                   sublabel={c.sublabel}
@@ -156,6 +162,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                   <OptionCard
                     key={m.name}
                     item={m}
+                    imageSrc={getToppingImageForItem(m)}
                     isSelected={isSelected}
                     onSelect={() => toggleMulti(m, selectedMeats, setSelectedMeats)}
                   />
@@ -172,6 +179,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                   <OptionCard
                     key={v.name}
                     item={v}
+                    imageSrc={getToppingImageForItem(v)}
                     isSelected={isSelected}
                     onSelect={() => toggleMulti(v, selectedVeggies, setSelectedVeggies)}
                   />
@@ -188,6 +196,7 @@ const BuildYourOwnCustomizer = ({ pizza, onClose }) => {
                   <OptionCard
                     key={t.name}
                     item={t}
+                    imageSrc={getToppingImageForItem(t)}
                     isSelected={isSelected}
                     onSelect={() => toggleMulti(t, selectedExtraToppings, setSelectedExtraToppings)}
                     showPrice

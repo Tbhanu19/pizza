@@ -7,6 +7,11 @@ import imgSpecialtyLoaded from '../assets/specialty-loaded.png';
 import imgSpecialtyBreakfast from '../assets/specialty-breakfast.png';
 import imgCheesePizza from '../assets/cheese-pizza.png';
 import imgVeggiePizza from '../assets/veggie-pizza.png';
+import imgDrinkCocaCola from '../assets/drink-coca-cola.png';
+import imgDrinkPepsi from '../assets/drink-pepsi.png';
+import imgDrinkSprite from '../assets/drink-sprite.png';
+import imgDrinkFanta from '../assets/drink-fanta.png';
+import { getToppingImage } from '../constants/toppingImages';
 
 const CartItem = ({ item, index }) => {
   const { updateQuantity, removeFromCart } = useCart();
@@ -25,10 +30,10 @@ const CartItem = ({ item, index }) => {
     const c = item.customizations;
     if (!c) return lines;
     if (c.size) lines.push({ type: 'line', label: 'Size', value: c.size.name });
-    if (c.crust) lines.push({ type: 'line', label: 'Crust', value: c.crust.name });
-    if (c.sauce) lines.push({ type: 'line', label: 'Sauce', value: c.sauce.name });
-    if (c.cheese) lines.push({ type: 'line', label: 'Cheese', value: c.cheese.name });
-    if (c.cheeses?.length > 0) lines.push({ type: 'line', label: 'Cheese', value: c.cheeses.map((t) => t.name).join(', ') });
+    if (c.crust) lines.push({ type: 'line', label: 'Crust', value: c.crust.name, image: getToppingImage(c.crust.name) });
+    if (c.sauce) lines.push({ type: 'line', label: 'Sauce', value: c.sauce.name, image: getToppingImage(c.sauce.name) });
+    if (c.cheese) lines.push({ type: 'line', label: 'Cheese', value: c.cheese.name, image: getToppingImage(c.cheese.name) });
+    if (c.cheeses?.length > 0) lines.push({ type: 'line', label: 'Cheese', value: c.cheeses.map((t) => t.name).join(', '), image: c.cheeses[0] ? getToppingImage(c.cheeses[0].name) : null });
     const meats = c.meats?.length > 0 ? c.meats.map((t) => t.name).join(', ') : null;
     const veggies = c.veggies?.length > 0 ? c.veggies.map((t) => t.name).join(', ') : null;
     if (meats && veggies) {
@@ -49,7 +54,7 @@ const CartItem = ({ item, index }) => {
     return lines;
   };
 
-  const isImageUrl = typeof item.image === 'string' && item.image.length > 1 && (item.image.startsWith('/') || item.image.startsWith('http') || item.image.includes('media'));
+  const isImageUrl = typeof item.image === 'string' && item.image.length > 1 && (item.image.startsWith('/') || item.image.startsWith('http') || item.image.includes('media') || item.image.includes('blob:'));
   const displayImage = (() => {
     if (isImageUrl) return item.image;
     const name = (item.name || '').toLowerCase();
@@ -60,6 +65,10 @@ const CartItem = ({ item, index }) => {
     if (name.includes('breakfast')) return imgSpecialtyBreakfast;
     if (name.includes('cheese pizza')) return imgCheesePizza;
     if (name.includes('veggie pizza')) return imgVeggiePizza;
+    if (name.includes('coca-cola') || name === 'coke') return imgDrinkCocaCola;
+    if (name.includes('pepsi')) return imgDrinkPepsi;
+    if (name.includes('sprite')) return imgDrinkSprite;
+    if (name.includes('fanta')) return imgDrinkFanta;
     return null;
   })();
 
@@ -81,8 +90,10 @@ const CartItem = ({ item, index }) => {
                   {line.items.map((t, j) => {
                     const name = t.name ?? t.topping_name ?? t.cheese_name ?? '';
                     const price = Number(t.price) ?? 0;
+                    const thumb = getToppingImage(name);
                     return (
                       <li key={j} className="cart-item-extra-item">
+                        {thumb ? <img src={thumb} alt="" className="cart-item-detail-thumb" /> : null}
                         • {name} (+${price.toFixed(2)})
                       </li>
                     );
@@ -91,6 +102,7 @@ const CartItem = ({ item, index }) => {
               </div>
             ) : (
               <div key={i} className="cart-item-detail-line">
+                {line.image ? <img src={line.image} alt="" className="cart-item-detail-thumb" /> : null}
                 {line.label ? <span className="cart-item-detail-label">{line.label}: </span> : null}
                 <span className="cart-item-detail-value">{line.value}</span>
               </div>

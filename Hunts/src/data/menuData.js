@@ -75,9 +75,9 @@ export const pizzaMenu = [
 
 export const drinks = [
   { id: 101, name: 'Coca-Cola', description: 'Classic 20oz bottle', basePrice: 0, image: '🥤', category: 'drinks' },
-  { id: 102, name: 'Sprite', description: 'Lemon-lime 20oz bottle', basePrice: 0, image: '🥤', category: 'drinks' },
-  { id: 103, name: 'Iced Tea', description: 'Sweet or unsweetened 20oz', basePrice: 0, image: '🥤', category: 'drinks' },
-  { id: 104, name: 'Water', description: 'Bottled water 20oz', basePrice: 0, image: '🥤', category: 'drinks' },
+  { id: 102, name: 'Pepsi', description: 'Classic 20oz bottle', basePrice: 0, image: '🥤', category: 'drinks' },
+  { id: 103, name: 'Sprite', description: 'Lemon-lime 20oz bottle', basePrice: 0, image: '🥤', category: 'drinks' },
+  { id: 104, name: 'Fanta', description: 'Orange 20oz bottle', basePrice: 0, image: '🥤', category: 'drinks' },
 ];
 
 export const sizes = [

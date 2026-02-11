@@ -62,6 +62,24 @@ const VegeterianItemsView = ({ onClose }) => {
     setActiveItem(null);
   };
 
+  const VegeterianCard = ({ item }) => {
+    const imageSrc = getVegeterianItemImage(item);
+    return (
+      <div className="vegeterian-item-card">
+        <div className="vegeterian-item-image">
+          {imageSrc ? <img src={imageSrc} alt={item.name} /> : <span className="vegeterian-item-emoji">{item.image}</span>}
+        </div>
+        <div className="vegeterian-item-info">
+          <h3 className="vegeterian-item-name">{item.name}</h3>
+          <p className="vegeterian-item-description">{item.description}</p>
+          <div className="vegeterian-item-footer">
+            <button type="button" className="customize-btn" onClick={() => handleCustomize(item)}>Customize</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (activeItem) {
     const isCheesePizza = activeItem.id === 'cheese-pizza' || (activeItem.name || '').toLowerCase() === 'cheese pizza';
     if (isCheesePizza) {
@@ -83,29 +101,7 @@ const VegeterianItemsView = ({ onClose }) => {
           <div className="vegeterian-items-loading">Loading...</div>
         ) : (
           <div className="vegeterian-items-grid">
-            {items.map((item) => {
-              const imageSrc = getVegeterianItemImage(item);
-              return (
-              <div key={item.id} className="vegeterian-item-card">
-                <div className="vegeterian-item-image">
-                  {imageSrc ? (
-                    <img src={imageSrc} alt={item.name} />
-                  ) : (
-                    <span className="vegeterian-item-emoji">{item.image}</span>
-                  )}
-                </div>
-                <div className="vegeterian-item-info">
-                  <h3 className="vegeterian-item-name">{item.name}</h3>
-                  <p className="vegeterian-item-description">{item.description}</p>
-                  <div className="vegeterian-item-footer">
-                    <button type="button" className="customize-btn" onClick={() => handleCustomize(item)}>
-                      Customize
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-            })}
+            {items.map((item) => <VegeterianCard key={item.id} item={item} />)}
           </div>
         )}
       </div>

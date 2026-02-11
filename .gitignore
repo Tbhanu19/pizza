@@ -23,9 +23,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# backend
-/backend/pizza.db
-/backend/__pycache__
-/backend/app/__pycache__
-/backend/app/**/__pycache__
+# backend (match Backend folder on Windows)
+/Backend/pizza.db
+/Backend/__pycache__
+/Backend/app/__pycache__
+/Backend/app/**/__pycache__
+**/__pycache__/
+**/*.pyc
+**/Backend/pizza.db
 
