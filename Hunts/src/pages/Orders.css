@@ -163,9 +163,36 @@
   text-transform: capitalize;
 }
 
+.order-items-preview p {
+  margin: 0;
+}
+
 .order-items-preview span + span::before {
   content: ' · ';
   color: #999;
+}
+
+.order-items-toggle {
+  margin-top: 0.5rem;
+  background: none;
+  border: none;
+  color: #e31837;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.order-items-toggle:hover {
+  color: #c4122f;
+}
+
+.order-items-toggle:focus {
+  outline: 2px solid #e31837;
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .order-total {

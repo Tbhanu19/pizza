@@ -9,6 +9,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedOrders, setExpandedOrders] = useState(new Set());
 
   useEffect(() => {
     if (!authChecked || !user) {
@@ -91,6 +92,18 @@ const Orders = () => {
     return Number.isNaN(n) ? value : `$${n.toFixed(2)}`;
   };
 
+  const toggleOrderExpansion = (orderId) => {
+    setExpandedOrders((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
   if (!authChecked) {
     return (
       <div className="orders-page">
@@ -160,12 +173,24 @@ const Orders = () => {
                 </div>
                 <div className="order-card-body">
                   {(order.items && order.items.length > 0) && (
-                    <p className="order-items-preview">
-                      {order.items.slice(0, 3).map((item, i) => (
-                        <span key={i}>{item.name || item.product_name || item.title || 'Item'}{item.quantity > 1 ? ` × ${item.quantity}` : ''}</span>
-                      ))}
-                      {order.items.length > 3 && <span> +{order.items.length - 3} more</span>}
-                    </p>
+                    <div className="order-items-preview">
+                      <p>
+                        {(expandedOrders.has(order.id) ? order.items : order.items.slice(0, 3)).map((item, i) => (
+                          <span key={i}>{item.name || item.product_name || item.title || 'Item'}{item.quantity > 1 ? ` × ${item.quantity}` : ''}</span>
+                        ))}
+                      </p>
+                      {order.items.length > 3 && (
+                        <button
+                          type="button"
+                          className="order-items-toggle"
+                          onClick={() => toggleOrderExpansion(order.id)}
+                        >
+                          {expandedOrders.has(order.id) 
+                            ? 'Show less' 
+                            : `+${order.items.length - 3} more`}
+                        </button>
+                      )}
+                    </div>
                   )}
                   {(order.address || order.delivery_address) && (
                     <p className="order-address">
