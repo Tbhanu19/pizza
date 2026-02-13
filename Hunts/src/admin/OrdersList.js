@@ -2,7 +2,7 @@ import React from 'react';
 import OrderCard from './OrderCard';
 import './OrdersList.css';
 
-const OrdersList = ({ orders, onStatusUpdate, filterStatus = null, updateOrderStatusFn = null }) => {
+const OrdersList = ({ orders, onStatusUpdate, filterStatus = null, updateOrderStatusFn = null, onStatusChangeBanner = null }) => {
   const filteredOrders = filterStatus
     ? orders.filter(order => {
         const status = order.status ?? order.order_status ?? order.state ?? order.order_state;
@@ -26,6 +26,7 @@ const OrdersList = ({ orders, onStatusUpdate, filterStatus = null, updateOrderSt
           order={order}
           onStatusUpdate={onStatusUpdate}
           updateOrderStatusFn={updateOrderStatusFn}
+          onStatusChangeBanner={onStatusChangeBanner}
         />
       ))}
     </div>

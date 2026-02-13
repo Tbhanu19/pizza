@@ -39,6 +39,22 @@
   margin-bottom: 2rem;
 }
 
+.confirmation-payment-error {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.confirmation-order-id {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
 .order-total {
   display: flex;
   justify-content: space-between;

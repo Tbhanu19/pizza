@@ -11,37 +11,12 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedOrders, setExpandedOrders] = useState(new Set());
-  const previousStatusesRef = useRef({});
 
   const fetchOrders = async () => {
     if (!api.isConfigured()) return;
     try {
       const data = await api.getOrders();
       const raw = Array.isArray(data) ? data : data?.orders || [];
-      
-      const currentStatuses = {};
-      raw.forEach(order => {
-        const status = order.status ?? order.order_status ?? order.state ?? order.order_state ?? 'Confirmed';
-        currentStatuses[order.id] = String(status).trim();
-      });
-
-      const previousStatuses = previousStatusesRef.current;
-      let statusChanged = false;
-      
-      Object.keys(currentStatuses).forEach(orderId => {
-        if (previousStatuses[orderId] && previousStatuses[orderId] !== currentStatuses[orderId]) {
-          statusChanged = true;
-        }
-      });
-
-      if (statusChanged && Object.keys(previousStatuses).length > 0) {
-        try {
-          const audio = new Audio('/sounds/notification.mp3');
-          audio.play().catch(() => {});
-        } catch (err) {}
-      }
-
-      previousStatusesRef.current = currentStatuses;
       setOrders(raw);
       setError('');
     } catch (err) {

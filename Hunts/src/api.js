@@ -28,13 +28,18 @@ function headers() {
   return h;
 }
 
+const REQUEST_TIMEOUT_MS = 20000;
+
 async function request(method, path, body = null) {
   const url = `${API_BASE}${path}`;
-  const options = { method, headers: headers() };
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const options = { method, headers: headers(), signal: controller.signal };
   if (body != null) options.body = JSON.stringify(body);
-  
+
   try {
     const res = await fetch(url, options);
+    clearTimeout(timeoutId);
     if (!res.ok) {
       if (res.status === 401 && on401Callback) on401Callback();
       const err = new Error(res.statusText || 'Request failed');
@@ -51,9 +56,14 @@ async function request(method, path, body = null) {
     if (res.status === 204) return null;
     return res.json();
   } catch (error) {
-    
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error('Request timed out. Please check your connection and try again.');
+      timeoutError.status = 0;
+      timeoutError.isNetworkError = true;
+      throw timeoutError;
+    }
     if (error.status) throw error;
-   
     const networkError = new Error(error.message || 'Network error. Please check your connection.');
     networkError.status = 0;
     networkError.isNetworkError = true;
@@ -89,6 +99,9 @@ export const api = {
   getSpecialty: () => request('GET', '/menu/specialty'),
 
   checkout: (delivery) => request('POST', '/orders/checkout', delivery),
+  createPaymentIntent: (orderId) =>
+    request('POST', '/payments/create-payment-intent', { order_id: orderId }),
+  getPaymentConfig: () => request('GET', '/payments/config'),
   getOrders: () => request('GET', '/orders'),
   getOrder: (id) => request('GET', `/orders/${id}`),
 

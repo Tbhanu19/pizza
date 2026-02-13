@@ -4,7 +4,7 @@ import './OrderConfirmation.css';
 
 const OrderConfirmation = () => {
   const location = useLocation();
-  const { orderData, total } = location.state || {};
+  const { orderData, total, orderId, paymentError } = location.state || {};
 
   if (!orderData) {
     return (
@@ -20,8 +20,14 @@ const OrderConfirmation = () => {
   return (
     <div className="confirmation-page">
       <div className="confirmation-container">
+        {paymentError && (
+          <div className="confirmation-payment-error">
+            {paymentError}
+          </div>
+        )}
         <div className="confirmation-icon">✅</div>
         <h1>Order Confirmed!</h1>
+        {orderId && <p className="confirmation-order-id">Order #{orderId}</p>}
         <p className="confirmation-message">
           Thank you for your order, {orderData.name}!
         </p>

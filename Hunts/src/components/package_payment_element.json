@@ -1,16 +1,14 @@
 {
-  "name": "xyz-pizza-app",
+  "name": "ecommerce-stripe-payment-element",
   "version": "1.0.0",
-  "description": "A modern pizza ordering app similar to Domino's",
   "private": true,
   "dependencies": {
-    "@stripe/react-stripe-js": "^2.4.0",
-    "@stripe/stripe-js": "^2.2.0",
-    "axios": "^1.13.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "react-scripts": "5.0.1"
+    "react-router-dom": "^6.21.1",
+    "react-scripts": "5.0.1",
+    "@stripe/stripe-js": "^2.4.0",
+    "@stripe/react-stripe-js": "^2.4.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -19,7 +17,6 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "root": true,
     "extends": [
       "react-app"
     ]

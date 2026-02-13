@@ -99,14 +99,25 @@ const SignIn = ({ onClose }) => {
     setIsSubmitting(true);
     setErrors((prev) => ({ ...prev, submit: '' }));
 
+    const SUBMIT_TIMEOUT_MS = 25000;
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out. Please try again.')), SUBMIT_TIMEOUT_MS);
+    });
+
     try {
+      let result;
       if (isSignUp) {
-        
         const phoneDigits = formData.phone.replace(/\D/g, '');
-        await signup(formData.name, formData.email, formData.password, phoneDigits);
+        await Promise.race([
+          signup(formData.name, formData.email, formData.password, phoneDigits),
+          timeoutPromise,
+        ]);
         setErrors({ submit: 'Account created. You can sign in now.' });
       } else {
-        const result = await login(formData.email, formData.password);
+        result = await Promise.race([
+          login(formData.email, formData.password),
+          timeoutPromise,
+        ]);
         if (result && result.success) {
           onClose();
           navigate('/');
@@ -117,7 +128,7 @@ const SignIn = ({ onClose }) => {
     } catch (err) {
       console.error('SignIn error:', err);
       const errorMsg = err.detail || err.message || err.response?.data?.detail || 'Request failed. Please try again.';
-      setErrors({ submit: errorMsg });
+      setErrors({ submit: typeof errorMsg === 'string' ? errorMsg : 'Request failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }

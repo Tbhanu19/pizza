@@ -271,3 +271,35 @@
   }
 }
 
+.checkout-stripe-section {
+  max-width: 480px;
+}
+
+.checkout-stripe-order-id {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.checkout-stripe-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-stripe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.checkout-stripe-error {
+  margin: 0;
+}
+
+.checkout-stripe-pay {
+  margin-top: 0.5rem;
+}
+

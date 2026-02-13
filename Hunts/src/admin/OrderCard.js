@@ -3,7 +3,8 @@ import { adminApi } from './adminApi';
 import { formatDateTime } from '../utils/dateUtils';
 import './OrderCard.css';
 
-const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
+const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn, onStatusChangeBanner }) => {
+  
   const formatTotal = (value) => {
     if (value == null) return '—';
     const n = Number(value);
@@ -26,7 +27,13 @@ const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
 
   const getStatus = (order) => {
     const raw = order.status ?? order.order_status ?? order.state ?? order.order_state;
-    if (raw != null && String(raw).trim() !== '') return String(raw).trim().toUpperCase();
+    if (raw != null && String(raw).trim() !== '') {
+      const statusUpper = String(raw).trim().toUpperCase();
+      if (statusUpper === 'OUT_FOR_DELIVERY' || statusUpper === 'OUT FOR DELIVERY') {
+        return 'OUT_FOR_DELIVERY';
+      }
+      return statusUpper;
+    }
     return 'PENDING';
   };
 
@@ -56,14 +63,29 @@ const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
 
   const handleStatusUpdate = async (newStatus) => {
     try {
+      const statusLower = String(newStatus).toLowerCase();
       const updateFn = updateOrderStatusFn || ((id, status) => adminApi.updateOrderStatus(id, status));
-      await updateFn(order.id, newStatus);
+      await updateFn(order.id, statusLower);
+      
+      const statusDisplay = statusLower.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+      
+      if (onStatusChangeBanner) {
+        onStatusChangeBanner(`Order #${order.id} status updated to ${statusDisplay}`, 'success');
+      }
+      
       if (onStatusUpdate) {
         onStatusUpdate();
       }
     } catch (err) {
-      const msg = err.response?.data?.detail || err.detail || err.message || 'Failed to update order status';
-      alert(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      const errorMsg = err.response?.data?.detail || err.detail || err.message || 'Failed to update order status';
+      const errorText = typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg);
+      
+      if (onStatusChangeBanner) {
+        onStatusChangeBanner(errorText, 'error');
+      }
+      console.error('Failed to update order status:', err);
     }
   };
 
@@ -168,13 +190,13 @@ const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
             <>
               <button
                 className="order-action-btn accept-btn"
-                onClick={() => handleStatusUpdate('ACCEPTED')}
+                onClick={() => handleStatusUpdate('accepted')}
               >
                 Accept
               </button>
               <button
                 className="order-action-btn reject-btn"
-                onClick={() => handleStatusUpdate('REJECTED')}
+                onClick={() => handleStatusUpdate('rejected')}
               >
                 Reject
               </button>
@@ -183,7 +205,7 @@ const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
           {status === 'ACCEPTED' && (
             <button
               className="order-action-btn preparing-btn"
-              onClick={() => handleStatusUpdate('PREPARING')}
+              onClick={() => handleStatusUpdate('preparing')}
             >
               Mark Preparing
             </button>
@@ -191,15 +213,23 @@ const OrderCard = ({ order, onStatusUpdate, updateOrderStatusFn }) => {
           {status === 'PREPARING' && (
             <button
               className="order-action-btn ready-btn"
-              onClick={() => handleStatusUpdate('READY')}
+              onClick={() => handleStatusUpdate('ready')}
             >
               Mark Ready
             </button>
           )}
           {status === 'READY' && (
             <button
+              className="order-action-btn out-for-delivery-btn"
+              onClick={() => handleStatusUpdate('out_for_delivery')}
+            >
+              Mark Out for Delivery
+            </button>
+          )}
+          {status === 'OUT_FOR_DELIVERY' && (
+            <button
               className="order-action-btn delivered-btn"
-              onClick={() => handleStatusUpdate('DELIVERED')}
+              onClick={() => handleStatusUpdate('delivered')}
             >
               Mark Delivered
             </button>

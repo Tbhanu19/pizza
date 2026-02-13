@@ -226,6 +226,15 @@
   background: #0056b3;
 }
 
+.out-for-delivery-btn {
+  background: #ffc107;
+  color: #333;
+}
+
+.out-for-delivery-btn:hover {
+  background: #e0a800;
+}
+
 .delivered-btn {
   background: #28a745;
   color: #fff;

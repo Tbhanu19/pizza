@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { useCart } from '../context/CartContext';
 import { useLocationContext } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import './Checkout.css';
-
 
 function getStoreIsActive(store) {
   if (!store || store.isCurrent) return true;
@@ -24,6 +25,49 @@ function getStoreIsActive(store) {
     return status.toLowerCase() === 'active';
   }
   return Boolean(status);
+}
+
+function PaymentForm({ orderTotal, onSuccess, onError }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const handlePay = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setIsProcessing(true);
+    setMessage(null);
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/order-confirmation`,
+      },
+      redirect: 'if_required',
+    });
+    if (error) {
+      setMessage(error.message || 'Payment failed.');
+      setIsProcessing(false);
+      if (onError) onError(error);
+      return;
+    }
+    setIsProcessing(false);
+    if (onSuccess) onSuccess();
+  };
+
+  return (
+    <form onSubmit={handlePay} className="checkout-stripe-form">
+      <PaymentElement />
+      {message && <p className="error-message checkout-stripe-error">{message}</p>}
+      <button
+        type="submit"
+        className="submit-order-btn checkout-stripe-pay"
+        disabled={!stripe || isProcessing}
+      >
+        {isProcessing ? 'Processing...' : `Pay $${Number(orderTotal).toFixed(2)}`}
+      </button>
+    </form>
+  );
 }
 
 const Checkout = () => {
@@ -45,6 +89,8 @@ const Checkout = () => {
   const [submitError, setSubmitError] = useState('');
   const [isStoreActive, setIsStoreActive] = useState(true);
   const [hasPrefilled, setHasPrefilled] = useState(false);
+  const [stripePromise, setStripePromise] = useState(null);
+  const [paymentStep, setPaymentStep] = useState(null);
 
   const total = getTotalPrice();
   const deliveryFee = 0.00;
@@ -75,6 +121,19 @@ const Checkout = () => {
       setIsStoreActive(true);
     }
   }, [selectedLocation]);
+
+  useEffect(() => {
+    const key = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || process.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    if (key) {
+      loadStripe(key).then(setStripePromise);
+      return;
+    }
+    if (api.isConfigured()) {
+      api.getPaymentConfig().then((data) => {
+        if (data && data.publishable_key) loadStripe(data.publishable_key).then(setStripePromise);
+      }).catch(() => {});
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -131,15 +190,13 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
-   
     if (!isStoreActive) {
       setSubmitError('Currently this store is inactive to recive orders,thanks for your intrest');
       return;
     }
-    
     setIsSubmitting(true);
     setSubmitError('');
+    let order = null;
     try {
       if (useBackend && api.isConfigured()) {
         if (!selectedLocation || !selectedLocation.id || selectedLocation.id === 'current') {
@@ -162,11 +219,33 @@ const Checkout = () => {
             closing_time: selectedLocation.closing_time
           } : undefined
         };
-        const order = await api.checkout(payload);
+        order = await api.checkout(payload);
         await clearCart();
-        navigate('/order-confirmation', {
-          state: { orderData: formData, total: (order.total || total) + deliveryFee, orderId: order.id },
-        });
+        if (formData.paymentMethod === 'card' && stripePromise) {
+          try {
+            const { client_secret } = await api.createPaymentIntent(order.id);
+            setPaymentStep({
+              orderId: order.id,
+              clientSecret: client_secret,
+              orderTotal: (order.total || total) + deliveryFee,
+              formData: { ...formData },
+            });
+          } catch (payErr) {
+            const payMsg = payErr.detail || payErr.message || 'Payment setup failed.';
+            navigate('/order-confirmation', {
+              state: {
+                orderData: formData,
+                total: (order.total || total) + deliveryFee,
+                orderId: order.id,
+                paymentError: payMsg,
+              },
+            });
+          }
+        } else {
+          navigate('/order-confirmation', {
+            state: { orderData: formData, total: (order.total || total) + deliveryFee, orderId: order.id },
+          });
+        }
       } else {
         await new Promise((r) => setTimeout(r, 1500));
         await clearCart();
@@ -180,12 +259,57 @@ const Checkout = () => {
     }
   };
 
-  if (cart.length === 0) {
+  const handlePaymentSuccess = () => {
+    if (!paymentStep) return;
+    navigate('/order-confirmation', {
+      state: { orderData: paymentStep.formData, total: paymentStep.orderTotal, orderId: paymentStep.orderId },
+    });
+  };
+
+  if (cart.length === 0 && !paymentStep) {
     return (
       <div className="checkout-page">
         <div className="empty-cart-message">
           <h2>Your cart is empty</h2>
           <p>Add some items to your cart before checkout.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (paymentStep && paymentStep.clientSecret && stripePromise) {
+    const options = {
+      clientSecret: paymentStep.clientSecret,
+      appearance: {
+        theme: 'stripe',
+        variables: { colorPrimary: '#e31837', borderRadius: '8px' },
+      },
+    };
+    return (
+      <div className="checkout-page">
+        <div className="checkout-container">
+          <h1>Complete payment</h1>
+          <div className="checkout-content">
+            <div className="form-section checkout-stripe-section">
+              <p className="checkout-stripe-order-id">Order #{paymentStep.orderId}</p>
+              <p className="checkout-stripe-total">Total: ${Number(paymentStep.orderTotal).toFixed(2)}</p>
+              <Elements stripe={stripePromise} options={options}>
+                <PaymentForm
+                  orderTotal={paymentStep.orderTotal}
+                  onSuccess={handlePaymentSuccess}
+                />
+              </Elements>
+            </div>
+            <div className="order-summary">
+              <h2>Order Summary</h2>
+              <div className="summary-totals">
+                <div className="summary-row total">
+                  <span>Total:</span>
+                  <span>${Number(paymentStep.orderTotal).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
