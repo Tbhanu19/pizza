@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import SessionLocal, init_db
-from ..models import Category, Product, Topping, PizzaTopping, Location
+from ..models import Category, Product, Topping, PizzaTopping, Location, Store
 
 CATEGORIES = [
     "Build Your Own",
@@ -307,11 +307,63 @@ def seed_locations_if_empty(db: Session) -> None:
     db.commit()
 
 
+def seed_stores_from_locations(db: Session) -> None:
+    """Copy data from locations table to stores table; set is_active=True. Link each location to its store."""
+    if _count(db, Store) > 0:
+        
+        locations = db.query(Location).filter(Location.store_id.is_(None)).all()
+        stores = db.query(Store).all()
+        
+        def normalize_store_name(name: str) -> str:
+            """Normalize store name for matching."""
+            if not name:
+                return ""
+            normalized = ' '.join(name.strip().upper().split())
+            normalized = normalized.replace(' - ', '-').replace(' -', '-').replace('- ', '-')
+            return normalized
+        
+        for loc in locations:
+            if not loc.store_name:
+                continue
+            loc_name_clean = normalize_store_name(loc.store_name)
+            
+          
+            for store in stores:
+                if not store.name:
+                    continue
+                store_name_clean = normalize_store_name(store.name)
+                
+                if loc_name_clean == store_name_clean or loc_name_clean in store_name_clean or store_name_clean in loc_name_clean:
+                    loc.store_id = store.id
+                    break
+        
+        db.commit()
+        return
+    
+   
+    locations = db.query(Location).order_by(Location.id).all()
+    for loc in locations:
+        store = Store(
+            name=loc.store_name,
+            address=loc.address or None,
+            city=loc.city or None,
+            state=loc.state or None,
+            pincode=loc.pincode or None,
+            phone=loc.phone or None,
+            is_active=True,
+        )
+        db.add(store)
+        db.flush()
+        loc.store_id = store.id
+    db.commit()
+
+
 def run_seed():
     init_db()
     db = SessionLocal()
     try:
         seed_if_empty(db)
         seed_locations_if_empty(db)
+        seed_stores_from_locations(db)
     finally:
         db.close()

@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db, SessionLocal
-from .services import seed_if_empty, seed_locations_if_empty
-from .routers import menu_router, auth_router, cart_router, orders_router, locations_router
+from .services import seed_if_empty, seed_locations_if_empty, seed_stores_from_locations
+from .routers import menu_router, auth_router, cart_router, orders_router, locations_router, admin_router
 
 
 @asynccontextmanager
@@ -15,6 +15,7 @@ async def lifespan(app: FastAPI):
     try:
         seed_if_empty(db)
         seed_locations_if_empty(db)
+        seed_stores_from_locations(db)
     finally:
         db.close()
     yield
@@ -35,6 +36,7 @@ app.include_router(auth_router)
 app.include_router(cart_router)
 app.include_router(orders_router)
 app.include_router(locations_router)
+app.include_router(admin_router)
 
 
 @app.get("/")

@@ -1,15 +1,7 @@
-<<<<<<< HEAD
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
 sqlalchemy>=2.0.0
 pydantic[email]>=2.0.0
 bcrypt>=4.0.0
 python-jose[cryptography]>=3.3.0
-=======
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-sqlalchemy>=2.0.0
-pydantic[email]>=2.0.0
-bcrypt>=4.0.0
-python-jose[cryptography]>=3.3.0
->>>>>>> 9ea165a1704de24445771a5c551b07ef0ba8c933
+passlib[bcrypt]>=1.7.4

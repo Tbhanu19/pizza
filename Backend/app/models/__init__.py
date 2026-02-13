@@ -7,6 +7,8 @@ from .cart import Cart
 from .cart_item import CartItem
 from .order import Order
 from .location import Location
+from .store import Store
+from .admin import Admin
 
 __all__ = [
     "Category",
@@ -18,4 +20,6 @@ __all__ = [
     "CartItem",
     "Order",
     "Location",
+    "Store",
+    "Admin",
 ]
