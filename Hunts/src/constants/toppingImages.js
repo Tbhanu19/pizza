@@ -1,5 +1,4 @@
 
-
 import imgOriginalCrust from '../assets/toppings/original-crust.png';
 import imgThinCrust from '../assets/toppings/thin-crust.png';
 import imgTomatoSauce from '../assets/toppings/tomato-sauce.jpg';
@@ -39,7 +38,6 @@ const TOPPING_IMAGES = {
 };
 
 /**
- * Get image for an ingredient/option by name. Extras use same images as base ingredients.
  * @param {string} name - Option/ingredient name (e.g. "Pepperoni", "Extra Mozzarella")
  * @returns {string|null} - Image src or null
  */

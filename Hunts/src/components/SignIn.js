@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './SignIn.css';
 
 const SignIn = ({ onClose }) => {
+  const navigate = useNavigate();
   const { login, signup } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
@@ -14,12 +16,42 @@ const SignIn = ({ onClose }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const formatPhoneNumber = (value) => {
+    
+    const phoneNumber = value.replace(/\D/g, '');
+    
+   
+    const phoneNumberDigits = phoneNumber.slice(0, 10);
+    
+    
+    if (phoneNumberDigits.length === 0) {
+      return '';
+    } else if (phoneNumberDigits.length <= 3) {
+      return `(${phoneNumberDigits}`;
+    } else if (phoneNumberDigits.length <= 6) {
+      return `(${phoneNumberDigits.slice(0, 3)}) ${phoneNumberDigits.slice(3)}`;
+    } else {
+      return `(${phoneNumberDigits.slice(0, 3)}) ${phoneNumberDigits.slice(3, 6)}-${phoneNumberDigits.slice(6)}`;
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    
+    if (name === 'phone') {
+      const formatted = formatPhoneNumber(value);
+      setFormData((prev) => ({
+        ...prev,
+        [name]: formatted,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+    
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -46,6 +78,11 @@ const SignIn = ({ onClose }) => {
     }
     if (isSignUp && !formData.phone.trim()) {
       newErrors.phone = 'Phone is required';
+    } else if (isSignUp && formData.phone.trim()) {
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (phoneDigits.length !== 10) {
+        newErrors.phone = 'Phone number must be 10 digits';
+      }
     }
 
     setErrors(newErrors);
@@ -64,14 +101,23 @@ const SignIn = ({ onClose }) => {
 
     try {
       if (isSignUp) {
-        await signup(formData.name, formData.email, formData.password, formData.phone);
+        
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        await signup(formData.name, formData.email, formData.password, phoneDigits);
         setErrors({ submit: 'Account created. You can sign in now.' });
       } else {
-        await login(formData.email, formData.password);
-        onClose();
+        const result = await login(formData.email, formData.password);
+        if (result && result.success) {
+          onClose();
+          navigate('/');
+        } else {
+          setErrors({ submit: 'Login failed. Please try again.' });
+        }
       }
     } catch (err) {
-      setErrors({ submit: err.detail || err.message || 'Request failed. Please try again.' });
+      console.error('SignIn error:', err);
+      const errorMsg = err.detail || err.message || err.response?.data?.detail || 'Request failed. Please try again.';
+      setErrors({ submit: errorMsg });
     } finally {
       setIsSubmitting(false);
     }
@@ -129,6 +175,7 @@ const SignIn = ({ onClose }) => {
                 onChange={handleChange}
                 className={errors.phone ? 'error' : ''}
                 placeholder="Enter your phone number"
+                maxLength={14}
               />
               {errors.phone && <span className="error-message">{errors.phone}</span>}
             </div>

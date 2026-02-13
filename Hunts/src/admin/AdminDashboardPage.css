@@ -1,0 +1,138 @@
+.admin-dashboard-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-dashboard-page-inner {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.admin-dashboard-loading {
+  padding: 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.admin-dashboard-page h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+  color: #333;
+}
+
+.admin-dashboard-page-sub {
+  margin: 0 0 2rem;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.admin-dashboard-store-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.admin-dashboard-store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.admin-dashboard-store-title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.admin-dashboard-store-status {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.admin-dashboard-store-status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.admin-dashboard-store-status.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.admin-dashboard-error {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.admin-dashboard-store-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-dashboard-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.admin-dashboard-toggle-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #fff;
+  background: #28a745;
+}
+
+.admin-dashboard-toggle-btn.active {
+  background: #e31837;
+}
+
+.admin-dashboard-toggle-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.admin-dashboard-toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-dashboard-page-cta {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #e31837;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.admin-dashboard-page-cta:hover {
+  background: #c4122f;
+}

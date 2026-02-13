@@ -11,6 +11,26 @@ const RADIUS_OPTIONS = [
   { value: 20, label: '20 Miles' },
 ];
 
+
+function getStoreIsActive(store) {
+  if (!store) return true;
+  const status =
+    store.storestatus ??
+    store.store_status ??
+    store.status ??
+    store.store?.storestatus ??
+    store.store?.store_status ??
+    store.store?.is_active ??
+    store.is_active ??
+    store.active ??
+    store.isActive;
+  if (status === undefined || status === null) return true;
+  if (typeof status === 'string') {
+    return status.toLowerCase() === 'active';
+  }
+  return Boolean(status);
+}
+
 const LocationSelector = ({ onClose }) => {
   const { selectedLocation, selectLocation } = useLocationContext();
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,7 +55,17 @@ const LocationSelector = ({ onClose }) => {
     setSearchError('');
     try {
       const data = await api.searchLocations(q, radius || null);
-      let list = Array.isArray(data) ? data : [];
+      let list = Array.isArray(data)
+        ? data
+        : data?.results ?? data?.data ?? data?.stores ?? data?.locations ?? [];
+      if (!Array.isArray(list)) list = [];
+      
+      list = list.map((item) => {
+        if (item && item.store && typeof item.store === 'object') {
+          return { ...item.store, ...item, storestatus: item.storestatus ?? item.store.storestatus ?? item.store.store_status ?? item.store.is_active };
+        }
+        return item;
+      });
       const numRadius = radius ? Number(radius) : null;
       if (numRadius != null && numRadius > 0) {
         list = list.filter((store) => {
@@ -74,6 +104,12 @@ const LocationSelector = ({ onClose }) => {
       phone: store.phone,
       opening_time: store.opening_time,
       closing_time: store.closing_time,
+      storestatus: store.storestatus ?? store.store_status ?? store.status,
+      store_status: store.store_status ?? store.storestatus,
+      status: store.status ?? store.storestatus ?? store.store_status,
+      is_active: store.is_active ?? store.store?.is_active,
+      active: store.active,
+      isActive: store.isActive,
       isCurrent: false,
     });
     onClose();
@@ -161,7 +197,17 @@ const LocationSelector = ({ onClose }) => {
                     className="location-store-card"
                     onClick={() => handleSelectLocation(store)}
                   >
-                    <div className="location-store-name">{store.store_name}</div>
+                    <div className="location-store-header">
+                      <div className="location-store-name">{store.store_name}</div>
+                      {(() => {
+                        const isActive = getStoreIsActive(store);
+                        return (
+                          <span className={`location-status-badge ${isActive ? 'active' : 'inactive'}`}>
+                            {isActive ? 'ACTIVE' : 'INACTIVE'}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     {(store.distance_miles != null || store.distance != null) && (
                       <div className="location-store-distance">
                         {(store.distance_miles ?? store.distance).toFixed(2)} miles
@@ -205,23 +251,25 @@ const LocationSelector = ({ onClose }) => {
                     </>
                   ) : (
                     <>
-                      <div className="location-address">
-                        {selectedLocation.store_name || selectedLocation.address}
-                      </div>
-                      <div className="location-city">
-                        {selectedLocation.address}
-                        {[selectedLocation.city, selectedLocation.state].filter(Boolean).length > 0 && (
-                          <> · {[selectedLocation.city, selectedLocation.state].filter(Boolean).join(', ')}</>
-                        )}
-                        {selectedLocation.pincode && ` ${selectedLocation.pincode}`}
-                      </div>
-                      {selectedLocation.phone && (
-                        <div className="location-city">📞 {selectedLocation.phone}</div>
-                      )}
-                      {selectedLocation.opening_time && selectedLocation.closing_time && (
-                        <div className="location-city">
-                          🕐 {selectedLocation.opening_time} – {selectedLocation.closing_time}
+                      <div className="location-store-header">
+                        <div className="location-store-name">
+                          {selectedLocation.store_name || selectedLocation.address}
                         </div>
+                        {(() => {
+                          const isActive = getStoreIsActive(selectedLocation);
+                          return (
+                            <span className={`location-status-badge ${isActive ? 'active' : 'inactive'}`}>
+                              {isActive ? 'ACTIVE' : 'INACTIVE'}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                      <div className="location-store-address">{formatAddress(selectedLocation)}</div>
+                      {selectedLocation.phone && (
+                        <div className="location-store-phone">📞 {selectedLocation.phone}</div>
+                      )}
+                      {formatTimings(selectedLocation) && (
+                        <div className="location-store-timings">🕐 {formatTimings(selectedLocation)}</div>
                       )}
                     </>
                   )}

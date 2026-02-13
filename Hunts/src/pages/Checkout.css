@@ -37,6 +37,22 @@
   margin-bottom: 2rem;
 }
 
+.store-inactive-banner {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.store-inactive-banner p {
+  margin: 0;
+  color: #856404;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
 .checkout-content {
   display: grid;
   grid-template-columns: 1fr 400px;

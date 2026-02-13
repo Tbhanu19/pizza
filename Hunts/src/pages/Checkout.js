@@ -1,13 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLocationContext } from '../context/LocationContext';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import './Checkout.css';
+
+
+function getStoreIsActive(store) {
+  if (!store || store.isCurrent) return true;
+  const status =
+    store.storestatus ??
+    store.store_status ??
+    store.status ??
+    store.store?.storestatus ??
+    store.store?.store_status ??
+    store.store?.is_active ??
+    store.is_active ??
+    store.active ??
+    store.isActive;
+  if (status === undefined || status === null) return true;
+  if (typeof status === 'string') {
+    return status.toLowerCase() === 'active';
+  }
+  return Boolean(status);
+}
 
 const Checkout = () => {
   const { cart, getTotalPrice, clearCart, useBackend } = useCart();
   const { selectedLocation } = useLocationContext();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -21,10 +43,38 @@ const Checkout = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [isStoreActive, setIsStoreActive] = useState(true);
+  const [hasPrefilled, setHasPrefilled] = useState(false);
 
   const total = getTotalPrice();
   const deliveryFee = 0.00;
   const finalTotal = total + deliveryFee;
+
+  useEffect(() => {
+    if (user && !hasPrefilled) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        email: prev.email || user.email || '',
+        phone: prev.phone || user.phone || '',
+      }));
+      setHasPrefilled(true);
+    }
+  }, [user, hasPrefilled]);
+
+  useEffect(() => {
+    if (selectedLocation && !selectedLocation.isCurrent) {
+      const active = getStoreIsActive(selectedLocation);
+      setIsStoreActive(active);
+      if (!active) {
+        setSubmitError('Currently this store is inactive to recive orders,thanks for your intrest');
+      } else {
+        setSubmitError('');
+      }
+    } else {
+      setIsStoreActive(true);
+    }
+  }, [selectedLocation]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,6 +92,16 @@ const Checkout = () => {
 
   const validateForm = () => {
     const newErrors = {};
+
+    if (!selectedLocation || !selectedLocation.id || selectedLocation.id === 'current') {
+      setSubmitError('Please select a store location');
+      return false;
+    }
+
+    if (!isStoreActive) {
+      setSubmitError('Currently this store is inactive to recive orders,thanks for your intrest');
+      return false;
+    }
 
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
@@ -71,11 +131,37 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    
+   
+    if (!isStoreActive) {
+      setSubmitError('Currently this store is inactive to recive orders,thanks for your intrest');
+      return;
+    }
+    
     setIsSubmitting(true);
     setSubmitError('');
     try {
       if (useBackend && api.isConfigured()) {
-        const payload = { ...formData, location: selectedLocation ? { store_name: selectedLocation.store_name, address: selectedLocation.address, area: selectedLocation.area, city: selectedLocation.city, state: selectedLocation.state, pincode: selectedLocation.pincode, phone: selectedLocation.phone, opening_time: selectedLocation.opening_time, closing_time: selectedLocation.closing_time } : undefined };
+        if (!selectedLocation || !selectedLocation.id || selectedLocation.id === 'current') {
+          setSubmitError('Please select a store location');
+          setIsSubmitting(false);
+          return;
+        }
+        const payload = {
+          ...formData,
+          store_id: selectedLocation.store_id ?? selectedLocation.id,
+          location: selectedLocation ? {
+            store_name: selectedLocation.store_name,
+            address: selectedLocation.address,
+            area: selectedLocation.area,
+            city: selectedLocation.city,
+            state: selectedLocation.state,
+            pincode: selectedLocation.pincode,
+            phone: selectedLocation.phone,
+            opening_time: selectedLocation.opening_time,
+            closing_time: selectedLocation.closing_time
+          } : undefined
+        };
         const order = await api.checkout(payload);
         await clearCart();
         navigate('/order-confirmation', {
@@ -109,6 +195,12 @@ const Checkout = () => {
     <div className="checkout-page">
       <div className="checkout-container">
         <h1>Checkout</h1>
+
+        {selectedLocation && !selectedLocation.isCurrent && !isStoreActive && (
+          <div className="store-inactive-banner">
+            <p>Currently this store is inactive to recive orders,thanks for your intrest</p>
+          </div>
+        )}
 
         <div className="checkout-content">
           <form className="checkout-form" onSubmit={handleSubmit}>
@@ -225,7 +317,7 @@ const Checkout = () => {
             <button
               type="submit"
               className="submit-order-btn"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !isStoreActive}
             >
               {isSubmitting ? 'Processing...' : `Place Order - $${finalTotal.toFixed(2)}`}
             </button>

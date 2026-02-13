@@ -32,20 +32,33 @@ async function request(method, path, body = null) {
   const url = `${API_BASE}${path}`;
   const options = { method, headers: headers() };
   if (body != null) options.body = JSON.stringify(body);
-  const res = await fetch(url, options);
-  if (!res.ok) {
-    if (res.status === 401 && on401Callback) on401Callback();
-    const err = new Error(res.statusText || 'Request failed');
-    err.status = res.status;
-    try {
-      const data = await res.json();
-      const d = data?.detail;
-      err.detail = Array.isArray(d) ? d.map((x) => x.msg || x).join(', ') : d;
-    } catch (_) {}
-    throw err;
+  
+  try {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      if (res.status === 401 && on401Callback) on401Callback();
+      const err = new Error(res.statusText || 'Request failed');
+      err.status = res.status;
+      err.response = { status: res.status, data: null };
+      try {
+        const data = await res.json();
+        const d = data?.detail;
+        err.detail = Array.isArray(d) ? d.map((x) => x.msg || x).join(', ') : d;
+        err.response.data = data;
+      } catch (_) {}
+      throw err;
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  } catch (error) {
+    
+    if (error.status) throw error;
+   
+    const networkError = new Error(error.message || 'Network error. Please check your connection.');
+    networkError.status = 0;
+    networkError.isNetworkError = true;
+    throw networkError;
   }
-  if (res.status === 204) return null;
-  return res.json();
 }
 
 export const api = {

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
+import { formatDateTime } from '../utils/dateUtils';
 import './Orders.css';
 
 const Orders = () => {
@@ -10,6 +11,43 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedOrders, setExpandedOrders] = useState(new Set());
+  const previousStatusesRef = useRef({});
+
+  const fetchOrders = async () => {
+    if (!api.isConfigured()) return;
+    try {
+      const data = await api.getOrders();
+      const raw = Array.isArray(data) ? data : data?.orders || [];
+      
+      const currentStatuses = {};
+      raw.forEach(order => {
+        const status = order.status ?? order.order_status ?? order.state ?? order.order_state ?? 'Confirmed';
+        currentStatuses[order.id] = String(status).trim();
+      });
+
+      const previousStatuses = previousStatusesRef.current;
+      let statusChanged = false;
+      
+      Object.keys(currentStatuses).forEach(orderId => {
+        if (previousStatuses[orderId] && previousStatuses[orderId] !== currentStatuses[orderId]) {
+          statusChanged = true;
+        }
+      });
+
+      if (statusChanged && Object.keys(previousStatuses).length > 0) {
+        try {
+          const audio = new Audio('/sounds/notification.mp3');
+          audio.play().catch(() => {});
+        } catch (err) {}
+      }
+
+      previousStatusesRef.current = currentStatuses;
+      setOrders(raw);
+      setError('');
+    } catch (err) {
+      setError(err.detail || err.message || 'Could not load orders.');
+    }
+  };
 
   useEffect(() => {
     if (!authChecked || !user) {
@@ -25,36 +63,22 @@ const Orders = () => {
     let cancelled = false;
     setLoading(true);
     setError('');
-    api
-      .getOrders()
-      .then((data) => {
-        if (cancelled) return;
-        const raw = Array.isArray(data) ? data : data?.orders || [];
-        setOrders(raw);
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setOrders([]);
-          setError(err.detail || err.message || 'Could not load orders.');
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [user, authChecked]);
+    
+    fetchOrders().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
 
-  const formatDate = (value) => {
-    if (value == null || value === '') return '—';
-    let d;
-    if (typeof value === 'number') {
-      const ms = value < 1e12 ? value * 1000 : value;
-      d = new Date(ms);
-    } else {
-      d = new Date(value);
-    }
-    return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-  };
+    const interval = setInterval(() => {
+      if (!cancelled) {
+        fetchOrders();
+      }
+    }, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user, authChecked]);
 
   const getOrderTime = (order) => {
     const raw =
@@ -67,7 +91,7 @@ const Orders = () => {
       order.placed_at ??
       order.timestamp ??
       order.updated_at;
-    return formatDate(raw);
+    return formatDateTime(raw);
   };
 
   const getOrderStatus = (order) => {

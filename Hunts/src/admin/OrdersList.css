@@ -1,0 +1,12 @@
+.orders-list-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.orders-list-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+  font-size: 1.1rem;
+}

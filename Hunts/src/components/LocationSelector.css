@@ -153,11 +153,42 @@
   box-shadow: 0 2px 8px rgba(227, 24, 55, 0.12);
 }
 
+.location-store-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  gap: 0.75rem;
+}
+
 .location-store-name {
   font-weight: 700;
   font-size: 1.05rem;
   color: #333;
-  margin-bottom: 0.35rem;
+  flex: 1;
+}
+
+.location-status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.location-status-badge.active {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.location-status-badge.inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 .location-store-distance {
@@ -235,10 +266,18 @@
   flex: 1;
 }
 
+.location-address-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
 .location-address {
   font-weight: 600;
   color: #333;
-  margin-bottom: 0.25rem;
+  flex: 1;
 }
 
 .location-city {

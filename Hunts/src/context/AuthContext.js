@@ -38,10 +38,21 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const data = await api.login({ email, password });
-    localStorage.setItem(TOKEN_KEY, data.access_token);
-    setUser({ id: data.user.id, name: data.user.name, email: data.user.email, phone: data.user.phone });
-    return { success: true, user: data.user };
+    try {
+      const data = await api.login({ email, password });
+      if (!data || !data.access_token) {
+        throw new Error('Login failed: No token received');
+      }
+      localStorage.setItem(TOKEN_KEY, data.access_token);
+      if (data.user) {
+        setUser({ id: data.user.id, name: data.user.name, email: data.user.email, phone: data.user.phone });
+        return { success: true, user: data.user };
+      }
+      throw new Error('Login failed: No user data received');
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
   const signup = async (name, email, password, phone) => {
