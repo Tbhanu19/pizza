@@ -41,7 +41,7 @@ from ..services.admin_service import (
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-VALID_STATUSES = {"PENDING", "ACCEPTED", "REJECTED", "PREPARING", "READY", "DELIVERED"}
+VALID_STATUSES = {"PENDING", "CONFIRMED", "ACCEPTED", "REJECTED", "PREPARING", "READY", "OUT_FOR_DELIVERY", "DELIVERED"}
 
 
 @router.get("/stores", response_model=list[StoreOut])
@@ -175,6 +175,9 @@ def _order_to_out(order: Order) -> OrderOut:
         items=items,
         location=order.location,
         status=order.status,
+        payment_intent_id=order.payment_intent_id,
+        payment_status=order.payment_status,
+        payment_method=order.payment_method,
         accepted_at=order.accepted_at,
         rejected_at=order.rejected_at,
         updated_at=order.updated_at,
@@ -414,9 +417,10 @@ def list_admin_orders(
     query = db.query(Order).filter(Order.store_id == current_admin.store_id)
     
     if status:
-        if status not in VALID_STATUSES:
-            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}")
-        query = query.filter(Order.status == status)
+        status_upper = (status or "").strip().upper()
+        if status_upper not in VALID_STATUSES:
+            raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}")
+        query = query.filter(Order.status == status_upper)
     
     orders = query.order_by(Order.created_at.desc()).all()
     return [_order_to_out(o) for o in orders]
@@ -428,7 +432,7 @@ def accept_order(
     current_admin: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Accept an order. Sets status to ACCEPTED and accepted_at timestamp."""
+    """Accept an order. Sets status to accepted and accepted_at timestamp."""
     if current_admin.store_id is None:
         raise HTTPException(status_code=403, detail="Admin must be assigned to a store")
     order = db.query(Order).filter(
@@ -439,8 +443,8 @@ def accept_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    if order.status != "PENDING":
-        raise HTTPException(status_code=400, detail=f"Order status is {order.status}, can only accept PENDING orders")
+    if (order.status or "").upper() not in ("PENDING", "CONFIRMED"):
+        raise HTTPException(status_code=400, detail=f"Order status is {order.status}, can only accept PENDING or CONFIRMED orders")
     
     order.status = "ACCEPTED"
     order.accepted_at = datetime.now(timezone.utc)
@@ -457,7 +461,7 @@ def reject_order(
     current_admin: Admin = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Reject an order. Sets status to REJECTED and rejected_at timestamp."""
+    """Reject an order. Sets status to rejected and rejected_at timestamp."""
     if current_admin.store_id is None:
         raise HTTPException(status_code=403, detail="Admin must be assigned to a store")
     order = db.query(Order).filter(
@@ -468,8 +472,8 @@ def reject_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    if order.status != "PENDING":
-        raise HTTPException(status_code=400, detail=f"Order status is {order.status}, can only reject PENDING orders")
+    if (order.status or "").upper() not in ("PENDING", "CONFIRMED"):
+        raise HTTPException(status_code=400, detail=f"Order status is {order.status}, can only reject PENDING or CONFIRMED orders")
     
     order.status = "REJECTED"
     order.rejected_at = datetime.now(timezone.utc)
@@ -488,12 +492,14 @@ def update_order_status(
     db: Session = Depends(get_db),
 ):
     """Update order status. Valid transitions:
-    - ACCEPTED → PREPARING
-    - PREPARING → READY
-    - READY → DELIVERED
+    - accepted → preparing
+    - preparing → ready
+    - ready → out_for_delivery
+    - out_for_delivery → delivered
     """
-    if body.status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}")
+    new_status_upper = (body.status or "").strip().upper()
+    if new_status_upper not in VALID_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}")
     if current_admin.store_id is None:
         raise HTTPException(status_code=403, detail="Admin must be assigned to a store")
     order = db.query(Order).filter(
@@ -503,26 +509,27 @@ def update_order_status(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    
+    current_status_upper = (order.status or "").strip().upper()
     valid_transitions = {
         "ACCEPTED": {"PREPARING"},
         "PREPARING": {"READY"},
-        "READY": {"DELIVERED"},
+        "READY": {"OUT_FOR_DELIVERY"},
+        "OUT_FOR_DELIVERY": {"DELIVERED"},
     }
     
-    if order.status in valid_transitions:
-        if body.status not in valid_transitions[order.status]:
+    if current_status_upper in valid_transitions:
+        if new_status_upper not in valid_transitions[current_status_upper]:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot transition from {order.status} to {body.status}. Valid transitions: {', '.join(valid_transitions[order.status])}"
+                detail=f"Cannot transition from {order.status} to {body.status}. Valid transitions: {', '.join(valid_transitions[current_status_upper])}"
             )
-    elif order.status not in {"ACCEPTED", "PREPARING", "READY"}:
+    elif current_status_upper not in {"ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY"}:
         raise HTTPException(
             status_code=400,
-            detail=f"Cannot update status from {order.status}. Order must be ACCEPTED, PREPARING, or READY."
+            detail=f"Cannot update status from {order.status}. Order must be ACCEPTED, PREPARING, READY, or OUT_FOR_DELIVERY."
         )
     
-    order.status = body.status
+    order.status = new_status_upper
     order.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(order)
@@ -539,14 +546,16 @@ def update_order(
 ):
     """
     Generic endpoint to update order status. Handles all status transitions:
-    - PENDING → ACCEPTED (sets accepted_at)
-    - PENDING → REJECTED (sets rejected_at)
-    - ACCEPTED → PREPARING
-    - PREPARING → READY
-    - READY → DELIVERED
+    - pending → accepted (sets accepted_at)
+    - pending → rejected (sets rejected_at)
+    - accepted → preparing
+    - preparing → ready
+    - ready → out_for_delivery
+    - out_for_delivery → delivered
     """
-    if body.status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(VALID_STATUSES)}")
+    new_status_upper = (body.status or "").strip().upper()
+    if new_status_upper not in VALID_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {', '.join(sorted(VALID_STATUSES))}")
     if current_admin.store_id is None:
         raise HTTPException(status_code=403, detail="Admin must be assigned to a store")
     order = db.query(Order).filter(
@@ -556,50 +565,57 @@ def update_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    current_status = order.status
-    new_status = body.status
+    current_status = (order.status or "").strip().upper()
     
-   
-    if current_status == "PENDING":
-        if new_status == "ACCEPTED":
+    if current_status in ("PENDING", "CONFIRMED"):
+        if new_status_upper == "ACCEPTED":
             order.status = "ACCEPTED"
             order.accepted_at = datetime.now(timezone.utc)
             order.updated_at = datetime.now(timezone.utc)
-        elif new_status == "REJECTED":
+        elif new_status_upper == "REJECTED":
             order.status = "REJECTED"
             order.rejected_at = datetime.now(timezone.utc)
             order.updated_at = datetime.now(timezone.utc)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot transition from PENDING to {new_status}. Valid transitions: ACCEPTED, REJECTED"
+                detail=f"Cannot transition from {current_status} to {body.status}. Valid transitions: ACCEPTED, REJECTED"
             )
     elif current_status == "ACCEPTED":
-        if new_status == "PREPARING":
+        if new_status_upper == "PREPARING":
             order.status = "PREPARING"
             order.updated_at = datetime.now(timezone.utc)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot transition from ACCEPTED to {new_status}. Valid transition: PREPARING"
+                detail=f"Cannot transition from ACCEPTED to {body.status}. Valid transition: PREPARING"
             )
     elif current_status == "PREPARING":
-        if new_status == "READY":
+        if new_status_upper == "READY":
             order.status = "READY"
             order.updated_at = datetime.now(timezone.utc)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot transition from PREPARING to {new_status}. Valid transition: READY"
+                detail=f"Cannot transition from PREPARING to {body.status}. Valid transition: READY"
             )
     elif current_status == "READY":
-        if new_status == "DELIVERED":
+        if new_status_upper == "OUT_FOR_DELIVERY":
+            order.status = "OUT_FOR_DELIVERY"
+            order.updated_at = datetime.now(timezone.utc)
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot transition from READY to {body.status}. Valid transition: OUT_FOR_DELIVERY"
+            )
+    elif current_status == "OUT_FOR_DELIVERY":
+        if new_status_upper == "DELIVERED":
             order.status = "DELIVERED"
             order.updated_at = datetime.now(timezone.utc)
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Cannot transition from READY to {new_status}. Valid transition: DELIVERED"
+                detail=f"Cannot transition from OUT_FOR_DELIVERY to {body.status}. Valid transition: DELIVERED"
             )
     else:
         raise HTTPException(

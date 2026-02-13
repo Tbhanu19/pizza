@@ -70,7 +70,10 @@ def init_db():
             if r.scalar() is None:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN status TEXT DEFAULT 'PENDING'"))
                 conn.commit()
-            
+            else:
+                conn.execute(text("UPDATE orders SET status = UPPER(TRIM(status)) WHERE status IS NOT NULL"))
+                conn.commit()
+
            
             r = conn.execute(text(
                 "SELECT 1 FROM pragma_table_info('orders') WHERE name='accepted_at'"
@@ -94,6 +97,18 @@ def init_db():
             if r.scalar() is None:
                 conn.execute(text("ALTER TABLE orders ADD COLUMN updated_at DATETIME"))
                 conn.commit()
+
+            for col, spec in [
+                ("payment_intent_id", "TEXT"),
+                ("payment_status", "TEXT DEFAULT 'pending'"),
+                ("payment_method", "TEXT"),
+            ]:
+                r = conn.execute(text(
+                    f"SELECT 1 FROM pragma_table_info('orders') WHERE name='{col}'"
+                ))
+                if r.scalar() is None:
+                    conn.execute(text(f"ALTER TABLE orders ADD COLUMN {col} {spec}"))
+                    conn.commit()
 
            
             r = conn.execute(text(

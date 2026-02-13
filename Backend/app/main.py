@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import init_db, SessionLocal
 from .services import seed_if_empty, seed_locations_if_empty, seed_stores_from_locations
-from .routers import menu_router, auth_router, cart_router, orders_router, locations_router, admin_router
+from .routers import menu_router, auth_router, cart_router, orders_router, locations_router, admin_router, payments_router
 
 
 @asynccontextmanager
@@ -37,6 +37,7 @@ app.include_router(cart_router)
 app.include_router(orders_router)
 app.include_router(locations_router)
 app.include_router(admin_router)
+app.include_router(payments_router)
 
 
 @app.get("/")

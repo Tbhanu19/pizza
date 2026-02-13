@@ -29,6 +29,16 @@ class CheckoutOut(BaseModel):
     total: float
 
 
+class CreatePaymentIntentIn(BaseModel):
+    order_id: int
+
+
+class CreatePaymentIntentOut(BaseModel):
+    client_secret: str
+    payment_intent_id: str
+    amount_cents: int
+
+
 class OrderItemOut(BaseModel):
     """Single line in an order with product name."""
     product_name: str
@@ -46,6 +56,9 @@ class OrderOut(BaseModel):
     items: list[OrderItemOut] = []
     location: Optional[dict] = None
     status: Optional[str] = None
+    payment_intent_id: Optional[str] = None
+    payment_status: Optional[str] = None
+    payment_method: Optional[str] = None
     accepted_at: Optional[datetime] = None
     rejected_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
